@@ -1,11 +1,34 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getAuthTokenFromRequest, getUserIdFromToken } from "@/lib/reviews";
 import { getSupabaseAdminClient } from "@/lib/chatbot/db";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+
+async function getAuthUser() {
+  const cookieStore = await cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
+          } catch {}
+        },
+      },
+    }
+  );
+  const { data } = await supabase.auth.getUser();
+  return data.user;
+}
 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const token = getAuthTokenFromRequest(request);
-  const userId = token ? getUserIdFromToken(token) : null;
+  const authUser = await getAuthUser();
+  const userId = authUser?.id;
   const supabase = getSupabaseAdminClient();
 
   if (!userId || !supabase) {

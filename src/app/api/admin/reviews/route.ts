@@ -1,6 +1,6 @@
-import places from "@/data/dalat.json";
-import { supabaseAdmin } from "@/lib/supabase/admin";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/reviews";
+import { getPlaces } from "@/lib/places";
 
 type ReviewRow = {
   id: number;
@@ -14,13 +14,6 @@ type ReviewRow = {
   created_at: string;
 };
 
-type PlaceRecord = {
-  slug: string;
-  name: string;
-};
-
-const placeMap = new Map((places as PlaceRecord[]).map((place) => [place.slug, place.name]));
-
 function buildAvatarUrl(name: string) {
   return `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}`;
 }
@@ -31,9 +24,17 @@ export async function GET(request: Request) {
     return Response.json({ error: "Forbidden" }, { status: 403 });
   }
 
+  const supabaseAdmin = getSupabaseAdminClient();
+  if (!supabaseAdmin) {
+    return Response.json({ error: "Supabase is not configured" }, { status: 500 });
+  }
+
+  const places = await getPlaces();
+  const placeMap = new Map(places.map((place) => [place.slug, place.name]));
+
   const { data, error } = await supabaseAdmin
     .from("place_reviews")
-    .select("id, place_slug, user_id, rating, content, image_url, approved, created_at")
+    .select("id, place_slug, user_id, user_name, rating, content, image_url, approved, created_at")
     .order("created_at", { ascending: false });
 
   if (error) {

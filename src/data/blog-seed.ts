@@ -1,0 +1,275 @@
+export type BlogSeedPost = {
+  slug: string;
+  title: string;
+  excerpt: string;
+  cover_image: string;
+  tags: string[];
+  content: string;
+  created_at: string;
+  view_count: number;
+  published: boolean;
+};
+
+type SeedInput = {
+  slug: string;
+  title: string;
+  excerpt: string;
+  cover_image: string;
+  tags: string[];
+  intro: string;
+  bullets: string[];
+  tip: string;
+  created_at: string;
+};
+
+function buildContent(input: SeedInput) {
+  return [
+    `# ${input.title}`,
+    "",
+    input.intro,
+    "",
+    "## Điểm chính",
+    ...input.bullets.map((bullet) => `- ${bullet}`),
+    "",
+    "## Mẹo nhanh",
+    `- ${input.tip}`,
+    "",
+    "## Kết luận",
+    "Giữ nhịp đi chậm, ưu tiên trải nghiệm thực tế và luôn có kế hoạch dự phòng nếu thời tiết thay đổi.",
+  ].join("\n");
+}
+
+const seedInputs: SeedInput[] = [
+  {
+    slug: "chinh-phuc-da-lat-2-ngay-1-dem",
+    title: "Chinh phục Đà Lạt 2 ngày 1 đêm",
+    excerpt: "Lịch trình gọn nhưng đủ trải nghiệm cho chuyến đi ngắn cuối tuần.",
+    cover_image: "/images/dalat1.png",
+    tags: ["lich-trinh", "2-ngay-1-dem", "can-ban"],
+    intro: "Nếu bạn chỉ có 2 ngày 1 đêm, hãy gom các điểm gần nhau để giảm thời gian di chuyển.",
+    bullets: ["Ngày 1 ưu tiên trung tâm và cafe", "Ngày 2 chọn một điểm ngoại ô rồi quay về sớm", "Đặt bàn/đặt xe trước nếu đi cuối tuần"],
+    tip: "Chọn homestay gần trung tâm để tiết kiệm thời gian di chuyển buổi tối.",
+    created_at: "2026-05-01T08:00:00.000Z",
+  },
+  {
+    slug: "chinh-phuc-da-lat-3-ngay-2-dem",
+    title: "Lịch trình Đà Lạt 3 ngày 2 đêm cho nhóm bạn",
+    excerpt: "Một nhịp đi cân bằng giữa tham quan, ăn uống và nghỉ ngơi.",
+    cover_image: "/images/dalat2.png",
+    tags: ["lich-trinh", "3-ngay-2-dem", "nhom-ban"],
+    intro: "3 ngày 2 đêm cho phép bạn đi chậm hơn và thêm một buổi săn mây hoặc trekking nhẹ.",
+    bullets: ["Phân bổ 1 ngày trung tâm, 1 ngày ngoại ô, 1 buổi tự do", "Đặt điểm ăn tối sớm để tránh chờ bàn", "Nên chừa 1 buổi dự phòng để đổi lịch nếu mưa"],
+    tip: "Nhóm bạn nên chốt ngân sách trước để chia đều chi phí.",
+    created_at: "2026-05-02T08:00:00.000Z",
+  },
+  {
+    slug: "sang-som-san-may-o-da-lat",
+    title: "Sáng sớm săn mây ở Đà Lạt: đi đâu, mấy giờ",
+    excerpt: "Những điểm và khung giờ dễ gặp mây đẹp nhất trong năm.",
+    cover_image: "/images/dalat3.png",
+    tags: ["san-may", "check-in", "da-lat"],
+    intro: "Săn mây thành công phụ thuộc nhiều vào thời tiết và thời điểm xuất phát hơn là chỉ chọn đúng địa điểm.",
+    bullets: ["Thức dậy trước 5 giờ để kịp đón sớm", "Chọn điểm cao và thoáng gió", "Luôn kiểm tra dự báo thời tiết trước một ngày"],
+    tip: "Mang áo khoác mỏng, găng tay và pin dự phòng cho điện thoại.",
+    created_at: "2026-05-03T08:00:00.000Z",
+  },
+  {
+    slug: "bo-cong-thuc-chon-cafe-da-lat",
+    title: "Công thức chọn quán cafe ở Đà Lạt theo gu của bạn",
+    excerpt: "Chọn cafe theo view, theo góc chụp hay theo độ yên tĩnh?",
+    cover_image: "/images/dalat4.png",
+    tags: ["cafe", "check-in", "kinh-nghiem"],
+    intro: "Đà Lạt có quá nhiều quán cafe, nên thay vì chọn ngẫu nhiên hãy chọn theo mục đích của chuyến đi.",
+    bullets: ["Muốn chụp ảnh thì ưu tiên nắng sáng", "Muốn làm việc thì cần ổ cắm và wifi ổn", "Muốn thư giãn thì nên chọn quán ít bàn"],
+    tip: "Đi trước 8 giờ sáng thường dễ có góc chụp đẹp và ít đông.",
+    created_at: "2026-05-04T08:00:00.000Z",
+  },
+  {
+    slug: "an-sang-da-lat-nen-bat-dau-tu-dau",
+    title: "Ăn sáng Đà Lạt nên bắt đầu từ đâu?",
+    excerpt: "Phở, bánh căn, bánh mì xíu mại hay đồ chay - đi theo nhịp của khu bạn ở.",
+    cover_image: "/images/dalat5.png",
+    tags: ["am-thuc", "an-sang", "da-lat"],
+    intro: "Bữa sáng ở Đà Lạt thường quyết định năng lượng cho cả ngày, nên đừng bỏ qua nó.",
+    bullets: ["Khu trung tâm có nhiều lựa chọn đi bộ được", "Đi sớm giúp tránh xếp hàng", "Chia sẻ món để thử được nhiều kiểu hơn"],
+    tip: "Nếu đi nhóm 3-4 người, gọi 2-3 món khác nhau rồi chia phần là hợp nhất.",
+    created_at: "2026-05-05T08:00:00.000Z",
+  },
+  {
+    slug: "kinh-nghiem-thue-xe-may-da-lat",
+    title: "Kinh nghiệm thuê xe máy Đà Lạt: đỡ mất tiền oan",
+    excerpt: "Checklist ngắn trước khi nhận xe để đi đồi dốc an toàn hơn.",
+    cover_image: "/images/dalat1.png",
+    tags: ["transport", "xe-may", "kinh-nghiem"],
+    intro: "Thuê xe máy giúp chủ động hơn khi khám phá các điểm ngoại ô, nhưng cần kiểm tra xe kỹ trước khi nhận.",
+    bullets: ["Chụp lại tình trạng xe trước khi đi", "Kiểm tra phanh, đèn và lốp", "Hỏi rõ chính sách xăng và trả xe"],
+    tip: "Đừng quên xin sẵn số điện thoại hỗ trợ khi xe gặp sự cố.",
+    created_at: "2026-05-06T08:00:00.000Z",
+  },
+  {
+    slug: "da-lat-di-mua-nen-an-gi",
+    title: "Đà Lạt đi mùa mưa nên ăn gì cho ấm bụng",
+    excerpt: "Những món nóng dễ cứu mood khi trời se lạnh và mưa kéo dài.",
+    cover_image: "/images/dalat2.png",
+    tags: ["am-thuc", "mua-mua", "mon-nong"],
+    intro: "Khi trời mưa, đồ nóng luôn là lựa chọn an toàn và đúng chất Đà Lạt.",
+    bullets: ["Ưu tiên món nước hoặc nướng", "Canh thời gian di chuyển giữa các điểm", "Mang áo khoác chống nước nhẹ"],
+    tip: "Giữ một quán cafe ấm làm điểm trú nếu trời mưa to bất chợt.",
+    created_at: "2026-05-07T08:00:00.000Z",
+  },
+  {
+    slug: "homestay-da-lat-nen-chon-kieu-nao",
+    title: "Homestay Đà Lạt nên chọn kiểu nào cho từng nhóm khách",
+    excerpt: "Cặp đôi, gia đình hay nhóm bạn sẽ có ưu tiên rất khác nhau.",
+    cover_image: "/images/dalat3.png",
+    tags: ["luu-tru", "homestay", "kinh-nghiem"],
+    intro: "Chọn homestay đúng nhu cầu sẽ giúp chuyến đi dễ chịu hơn nhiều so với chỉ nhìn ảnh đẹp.",
+    bullets: ["Cặp đôi ưu tiên riêng tư và view", "Gia đình nên chọn chỗ đỗ xe thuận tiện", "Nhóm bạn nên ưu tiên không gian sinh hoạt chung"],
+    tip: "Đọc kỹ thời gian check-in và phụ phí để tránh phát sinh không đáng có.",
+    created_at: "2026-05-08T08:00:00.000Z",
+  },
+  {
+    slug: "trekking-nhe-o-da-lat",
+    title: "Trekking nhẹ ở Đà Lạt: đi đâu để vừa vui vừa an toàn",
+    excerpt: "Một số cung đường nhẹ phù hợp cho người mới bắt đầu.",
+    cover_image: "/images/dalat4.png",
+    tags: ["trekking", "ngoai-troi", "da-lat"],
+    intro: "Trekking ở Đà Lạt rất đáng thử nếu bạn muốn đổi nhịp so với lịch trình cafe - chụp ảnh.",
+    bullets: ["Chọn cung ngắn trước nếu mới đi lần đầu", "Mang giày bám tốt và nước uống", "Đi cùng nhóm hoặc thuê hướng dẫn nếu cần"],
+    tip: "Tránh bắt đầu quá trễ buổi chiều để không bị hụt thời gian quay về.",
+    created_at: "2026-05-09T08:00:00.000Z",
+  },
+  {
+    slug: "ga-da-lat-chup-anh-the-nao-dep",
+    title: "Ga Đà Lạt chụp ảnh thế nào để không bị lẫn vào đám đông",
+    excerpt: "Góc chụp, thời điểm và vài mẹo nhỏ để ảnh có cảm giác điện ảnh hơn.",
+    cover_image: "/images/dalat5.png",
+    tags: ["check-in", "ga-da-lat", "chup-anh"],
+    intro: "Ga Đà Lạt là địa điểm quen thuộc, nên góc chụp và nhịp di chuyển sẽ quyết định ảnh có khác biệt hay không.",
+    bullets: ["Dậy sớm để tránh đông khách", "Tận dụng đường ray và mặt tiền ga", "Chọn trang phục có màu tương phản nhẹ"],
+    tip: "Chụp thêm ảnh chi tiết bảng tàu, tay nắm cửa và cửa sổ để có bộ ảnh đa dạng hơn.",
+    created_at: "2026-05-10T08:00:00.000Z",
+  },
+  {
+    slug: "doi-che-cau-dat-di-sang-hay-di-chieu",
+    title: "Đồi chè Cầu Đất: đi sáng hay đi chiều mới đẹp hơn",
+    excerpt: "Săn mây, ánh sáng và thời gian di chuyển - chọn sao cho hợp lịch.",
+    cover_image: "/images/dalat1.png",
+    tags: ["san-may", "doi-che", "ngoai-thanh"],
+    intro: "Đi Cầu Đất buổi sáng thường đẹp hơn nếu bạn muốn săn mây và chụp ảnh có lớp sương mỏng.",
+    bullets: ["Buổi sáng ít nắng gắt và dễ có sương", "Buổi chiều phù hợp nếu bạn muốn quay về trung tâm sớm", "Nên đi chung điểm với một quán cafe gần đó"],
+    tip: "Nếu trời quá trong, ưu tiên trải nghiệm không gian hơn là kỳ vọng mây dày.",
+    created_at: "2026-05-11T08:00:00.000Z",
+  },
+  {
+    slug: "cho-dem-da-lat-an-gi-va-di-dau",
+    title: "Chợ đêm Đà Lạt ăn gì và đi đâu trước cho đỡ lạc",
+    excerpt: "Bản đồ ăn vặt, đồ nóng và vài mẹo giữ ví tiền an toàn.",
+    cover_image: "/images/dalat2.png",
+    tags: ["cho-dem", "am-thuc", "da-lat"],
+    intro: "Chợ đêm rất đông nên bạn nên lên sẵn thứ tự ăn uống và điểm dừng trước khi đi.",
+    bullets: ["Đi từ 18:00 để đủ hàng quán mở", "Mang tiền mặt lẻ cho tiện", "Giữ nhịp đi bộ chậm để không bị quá tải"],
+    tip: "Đi một vòng quan sát rồi hãy mua, đừng chọn món đầu tiên bạn thấy.",
+    created_at: "2026-05-12T08:00:00.000Z",
+  },
+  {
+    slug: "da-lat-nen-di-mua-nao",
+    title: "Đà Lạt nên đi mùa nào thì dễ chịu nhất",
+    excerpt: "Mỗi mùa có một kiểu đẹp riêng, nhưng cũng có cái giá của nó.",
+    cover_image: "/images/dalat3.png",
+    tags: ["kinh-nghiem", "thoi-tiet", "da-lat"],
+    intro: "Đà Lạt gần như đẹp quanh năm, nhưng mức độ đông, mưa và sương khác nhau theo mùa.",
+    bullets: ["Mùa khô thuận tiện cho di chuyển", "Mùa mưa hợp cho không khí chậm và ấm", "Mùa lễ Tết cần đặt chỗ sớm"],
+    tip: "Nếu đi lần đầu, hãy chọn thời điểm ít mưa để dễ kiểm soát lịch trình hơn.",
+    created_at: "2026-05-13T08:00:00.000Z",
+  },
+  {
+    slug: "nhung-quan-nho-ngay-trung-tam-da-lat",
+    title: "Những quán nhỏ ở trung tâm Đà Lạt đáng ghé hơn quán hot",
+    excerpt: "Không phải lúc nào quán nổi tiếng nhất cũng là nơi phù hợp nhất với bạn.",
+    cover_image: "/images/dalat4.png",
+    tags: ["cafe", "trung-tam", "goi-y"],
+    intro: "Một quán nhỏ, ít khách và phục vụ ổn đôi khi cho trải nghiệm đáng nhớ hơn các điểm quá đông.",
+    bullets: ["Ưu tiên quán có khoảng ngồi thoáng", "Hỏi người địa phương về giờ vắng", "Đừng chỉ nhìn ảnh, hãy đọc đánh giá gần đây"],
+    tip: "Đi ngoài giờ cao điểm sẽ cảm nhận được không khí Đà Lạt rõ hơn.",
+    created_at: "2026-05-14T08:00:00.000Z",
+  },
+  {
+    slug: "da-lat-cho-nhom-gia-dinh",
+    title: "Du lịch Đà Lạt cho gia đình: cần chuẩn bị gì",
+    excerpt: "Lịch trình chậm hơn, điểm dừng ít hơn nhưng trải nghiệm lại trọn vẹn hơn.",
+    cover_image: "/images/dalat5.png",
+    tags: ["gia-dinh", "lich-trinh", "an-toan"],
+    intro: "Đi cùng gia đình cần ưu tiên nhịp di chuyển nhẹ, nhà vệ sinh sạch và bữa ăn ổn định.",
+    bullets: ["Chọn chỗ ở gần trung tâm hoặc tuyến di chuyển dễ", "Không nhồi quá nhiều điểm trong ngày", "Mang theo thuốc cơ bản cho trẻ nhỏ hoặc người lớn tuổi"],
+    tip: "Hãy ưu tiên điểm có ghế nghỉ và không gian chờ thoải mái.",
+    created_at: "2026-05-15T08:00:00.000Z",
+  },
+  {
+    slug: "chup-anh-da-lat-theo-mau-trang-phuc",
+    title: "Chụp ảnh Đà Lạt theo màu trang phục: chọn sao cho ảnh nổi",
+    excerpt: "Màu quần áo ảnh hưởng rất lớn đến cảm giác của bức hình trong sương.",
+    cover_image: "/images/dalat1.png",
+    tags: ["chup-anh", "outfit", "check-in"],
+    intro: "Đà Lạt hợp với nhiều bảng màu, nhưng không phải màu nào cũng nổi bật trên nền trời và rừng thông.",
+    bullets: ["Màu trung tính dễ hợp cảnh", "Tông đỏ, vàng hoặc xanh đậm thường nổi hơn", "Tránh họa tiết quá rối nếu chụp ngoài trời"],
+    tip: "Mang thêm áo khoác ngoài cùng tông để ảnh có chiều sâu hơn.",
+    created_at: "2026-05-16T08:00:00.000Z",
+  },
+  {
+    slug: "mon-nong-dem-da-lat-nen-thu",
+    title: "Món nóng đêm Đà Lạt nên thử ít nhất một lần",
+    excerpt: "Khi nhiệt độ xuống thấp, một món nóng đúng lúc là đủ cứu cả chuyến đi.",
+    cover_image: "/images/dalat2.png",
+    tags: ["am-thuc", "mon-nong", "chot-dem"],
+    intro: "Ăn đêm ở Đà Lạt có một cảm giác rất riêng: vừa lạnh vừa muốn thưởng thức món thật nóng.",
+    bullets: ["Ưu tiên quán đông vừa phải để món ra nhanh", "Ăn nhiều người sẽ dễ thử đa dạng hơn", "Giữ một phần bụng cho đồ ngọt sau đó"],
+    tip: "Đừng ăn quá muộn nếu hôm sau còn lịch trình sớm.",
+    created_at: "2026-05-17T08:00:00.000Z",
+  },
+  {
+    slug: "ho-tuyen-lam-di-sao-cho-het-ngay",
+    title: "Hồ Tuyền Lâm đi sao cho hết một ngày mà không bị mệt",
+    excerpt: "Cách ghép các hoạt động quanh hồ để có một ngày thật cân bằng.",
+    cover_image: "/images/dalat3.png",
+    tags: ["ho-tuyen-lam", "ngoai-troi", "nghi-duong"],
+    intro: "Hồ Tuyền Lâm phù hợp cho một ngày đi chậm nếu bạn biết ghép nhịp tham quan và nghỉ ngơi.",
+    bullets: ["Chọn khung sáng để đi thuyền hoặc chụp ảnh", "Trưa nên nghỉ tại một quán view hồ", "Chiều ghé thêm điểm gần nhau thay vì chạy xa"],
+    tip: "Mang nước và áo chống nắng, kể cả khi trời có vẻ dịu.",
+    created_at: "2026-05-18T08:00:00.000Z",
+  },
+  {
+    slug: "da-lat-tre-nen-di-dau-truoc",
+    title: "Đà Lạt trẻ nên đi đâu trước nếu đây là lần đầu",
+    excerpt: "Danh sách ưu tiên để cảm nhận đúng chất thành phố sương mù ngay lần đầu.",
+    cover_image: "/images/dalat4.png",
+    tags: ["lan-dau", "check-in", "tre"],
+    intro: "Lần đầu đến Đà Lạt, bạn không cần cố đi quá nhiều - chỉ cần chọn đúng các điểm tiêu biểu.",
+    bullets: ["Trung tâm để làm quen nhịp thành phố", "Một quán cafe view đẹp", "Một điểm ngoại ô để cảm nhận không khí khác biệt"],
+    tip: "Lịch trình ít điểm nhưng ở lâu hơn thường dễ nhớ hơn lịch trình quá dày.",
+    created_at: "2026-05-19T08:00:00.000Z",
+  },
+  {
+    slug: "buoi-toi-o-da-lat-nen-di-dau",
+    title: "Buổi tối ở Đà Lạt nên đi đâu để vừa chill vừa an toàn",
+    excerpt: "Một vài lựa chọn nhẹ nhàng cho nhịp tối khi thành phố đã lên đèn.",
+    cover_image: "/images/dalat5.png",
+    tags: ["buoi-toi", "an-toan", "chill"],
+    intro: "Buổi tối ở Đà Lạt không nhất thiết phải quá sôi động, quan trọng là đúng không khí bạn muốn.",
+    bullets: ["Chọn nơi đi bộ dễ và sáng", "Nếu đi muộn, ưu tiên khu đông người", "Kết thúc bằng một quán ấm để nạp lại năng lượng"],
+    tip: "Nên gọi xe/đặt bàn trước nếu bạn đi vào cuối tuần.",
+    created_at: "2026-05-20T08:00:00.000Z",
+  },
+];
+
+export const BLOG_SEED_POSTS: BlogSeedPost[] = seedInputs.map((input, index) => ({
+  slug: input.slug,
+  title: input.title,
+  excerpt: input.excerpt,
+  cover_image: input.cover_image,
+  tags: input.tags,
+  content: buildContent(input),
+  created_at: input.created_at,
+  view_count: 0,
+  published: true,
+}));

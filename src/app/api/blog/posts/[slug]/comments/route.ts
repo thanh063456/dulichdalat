@@ -1,10 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
 import { jwtDecode } from "jwt-decode";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { getSupabasePublicClient } from "@/lib/supabase/public";
 
 type UserPayload = {
   sub: string;
@@ -17,6 +12,10 @@ export async function GET(
 ) {
   try {
     const { slug } = await params;
+    const supabase = getSupabasePublicClient();
+    if (!supabase) {
+      return Response.json({ error: "Supabase is not configured" }, { status: 500 });
+    }
 
     // Get the post to get its ID
     const { data: post, error: postError } = await supabase
@@ -65,6 +64,11 @@ export async function POST(
   try {
     const { slug } = await params;
     const { content } = (await request.json()) as { content?: string };
+
+    const supabase = getSupabasePublicClient();
+    if (!supabase) {
+      return Response.json({ error: "Supabase is not configured" }, { status: 500 });
+    }
 
     if (!content || !content.trim()) {
       return Response.json(

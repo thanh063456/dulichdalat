@@ -1,10 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
 import { jwtDecode } from "jwt-decode";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { getSupabasePublicClient } from "@/lib/supabase/public";
 
 type UserPayload = {
   sub: string;
@@ -40,6 +35,11 @@ async function getAuthUser(request: Request): Promise<string | null> {
 }
 
 async function isAdmin(userId: string): Promise<boolean> {
+  const supabase = getSupabasePublicClient();
+  if (!supabase) {
+    return false;
+  }
+
   try {
     const { data } = await supabase
       .from("profiles")
@@ -84,6 +84,11 @@ export async function POST(request: Request) {
     }
 
     const slug = slugify(title);
+
+    const supabase = getSupabasePublicClient();
+    if (!supabase) {
+      return Response.json({ error: "Supabase is not configured" }, { status: 500 });
+    }
 
     // Check if slug already exists
     const { data: existing } = await supabase
@@ -143,6 +148,11 @@ export async function GET(request: Request) {
     const admin = await isAdmin(userId);
     if (!admin) {
       return Response.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const supabase = getSupabasePublicClient();
+    if (!supabase) {
+      return Response.json({ error: "Supabase is not configured" }, { status: 500 });
     }
 
     // Return all posts for admin

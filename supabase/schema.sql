@@ -397,6 +397,37 @@ using (
 create index if not exists idx_place_favorites_user_id on public.place_favorites(user_id);
 create index if not exists idx_place_favorites_place_slug on public.place_favorites(place_slug);
 
+-- Places catalog
+create table if not exists public.places (
+  slug text primary key,
+  name text not null,
+  category text not null default 'Điểm đến',
+  rating numeric(3,1) not null default 0,
+  review_count integer not null default 0,
+  is_hidden boolean not null default false,
+  address text not null default '',
+  hours text not null default '',
+  description text not null default '',
+  summary text not null default '',
+  image text not null default '',
+  tags text[] not null default '{}',
+  verified boolean not null default false,
+  phone text not null default '',
+  gmaps_link text not null default '',
+  geo jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+drop trigger if exists trg_places_updated_at on public.places;
+create trigger trg_places_updated_at
+before update on public.places
+for each row
+execute function public.set_updated_at();
+
+create index if not exists idx_places_category on public.places(category);
+create index if not exists idx_places_verified on public.places(verified);
+
 -- Blog posts table
 create table if not exists public.blog_posts (
   id bigserial primary key,

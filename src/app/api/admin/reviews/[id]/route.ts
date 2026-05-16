@@ -1,10 +1,15 @@
-import { supabaseAdmin } from "@/lib/supabase/admin";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/reviews";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser(request);
   if (!user || user.role !== "admin") {
     return Response.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const supabaseAdmin = getSupabaseAdminClient();
+  if (!supabaseAdmin) {
+    return Response.json({ error: "Supabase is not configured" }, { status: 500 });
   }
 
   const { id } = await params;
@@ -26,6 +31,11 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   const user = await getCurrentUser(request);
   if (!user || user.role !== "admin") {
     return Response.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const supabaseAdmin = getSupabaseAdminClient();
+  if (!supabaseAdmin) {
+    return Response.json({ error: "Supabase is not configured" }, { status: 500 });
   }
 
   const { id } = await params;

@@ -1,9 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { getBlogPostBySlug } from "@/lib/blog";
+import { getSupabasePublicClient } from "@/lib/supabase/public";
 
 export async function GET(
   request: Request,
@@ -12,25 +8,25 @@ export async function GET(
   try {
     const { slug } = await params;
 
-    const { data, error } = await supabase
-      .from("blog_posts")
-      .select("*, author:author_id(id, name)")
-      .eq("slug", slug)
-      .eq("published", true)
-      .single();
+    const data = await getBlogPostBySlug(slug);
 
-    if (error || !data) {
+    if (!data) {
       return Response.json(
         { error: "Post not found" },
         { status: 404 }
       );
     }
 
-    // Increment view count
-    await supabase
-      .from("blog_posts")
-      .update({ view_count: (data.view_count || 0) + 1 })
-      .eq("id", data.id);
+    if (data.id < 1000) {
+      const supabase = getSupabasePublicClient();
+      if (!supabase) {
+        return Response.json({ error: "Supabase is not configured" }, { status: 500 });
+      }
+      await supabase
+        .from("blog_posts")
+        .update({ view_count: (data.view_count || 0) + 1 })
+        .eq("id", data.id);
+    }
 
     return Response.json({ post: data });
   } catch (error) {

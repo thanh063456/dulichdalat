@@ -1,5 +1,28 @@
-import { createClient } from "@supabase/supabase-js";
-import { getAuthTokenFromRequest } from "@/lib/reviews";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
+
+async function getAuthUser() {
+  const cookieStore = await cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
+          } catch {}
+        },
+      },
+    }
+  );
+  const { data } = await supabase.auth.getUser();
+  return data.user;
+}
 
 type ReviewRow = {
   id: number;
@@ -22,28 +45,15 @@ function buildAvatarUrl(name: string) {
   return `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}`;
 }
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
-  process.env.SUPABASE_SERVICE_ROLE_KEY ?? ""
-);
-
 export async function GET(request: Request, { params }: { params: Promise<{ slug: string }> }) {
   try {
     const { slug } = await params;
-    const token = getAuthTokenFromRequest(request);
-    
-    // Verify user securely if token exists
-    let currentUserId = "";
-    if (token) {
-      const supabaseAnon = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
-        { global: { headers: { Authorization: `Bearer ${token}` } } }
-      );
-      const { data: { user } } = await supabaseAnon.auth.getUser();
-      if (user) {
-        currentUserId = user.id;
-      }
+    const user = await getAuthUser();
+    const currentUserId = user?.id ?? "";
+
+    const supabaseAdmin = getSupabaseAdminClient();
+    if (!supabaseAdmin) {
+      return Response.json({ error: "Supabase is not configured" }, { status: 500 });
     }
 
     // Use admin client to bypass RLS policies which might have infinite recursion bugs
@@ -120,23 +130,14 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
 export async function POST(request: Request, { params }: { params: Promise<{ slug: string }> }) {
   try {
     const { slug } = await params;
-    const token = getAuthTokenFromRequest(request);
+    const user = await getAuthUser();
 
-    if (!token) {
-      return Response.json({ error: "Missing or invalid token (Not authenticated)" }, { status: 401 });
+    const supabaseAdmin = getSupabaseAdminClient();
+    if (!supabaseAdmin) {
+      return Response.json({ error: "Supabase is not configured" }, { status: 500 });
     }
 
-    // Use anon client just to verify token securely
-    const supabaseAnon = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
-      { global: { headers: { Authorization: `Bearer ${token}` } } }
-    );
-
-    const { data: { user }, error: authError } = await supabaseAnon.auth.getUser();
-
-    if (authError || !user) {
-      console.log("[POST] Auth Error:", authError);
+    if (!user) {
       return Response.json({ error: "Phiên đăng nhập không hợp lệ hoặc đã hết hạn" }, { status: 401 });
     }
 

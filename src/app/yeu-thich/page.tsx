@@ -2,24 +2,12 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import places from "@/data/dalat.json";
-type PlaceRecord = {
-  slug: string;
-  name: string;
-  category?: string;
-  rating?: number;
-  reviewCount?: number;
-  address: string;
-  hours?: string;
-  description?: string;
-  tags?: string[];
-  image?: string;
-  summary?: string;
-};
+import type { PlaceRecord } from "@/lib/places";
 import FavoriteButton from "@/components/favorites/favorite-button";
 
 export default function FavoritesPage() {
   const [favorites, setFavorites] = useState<string[] | null>(null);
+  const [places, setPlaces] = useState<PlaceRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -43,11 +31,31 @@ export default function FavoritesPage() {
     };
   }, []);
 
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadPlaces() {
+      try {
+        const resp = await fetch("/api/places", { cache: "no-store" });
+        const data = (await resp.json()) as { places?: PlaceRecord[] };
+        if (mounted) {
+          setPlaces(data.places ?? []);
+        }
+      } catch {
+        if (mounted) setPlaces([]);
+      }
+    }
+
+    void loadPlaces();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const placesList = useMemo<PlaceRecord[]>(() => {
     if (!favorites) return [];
-    const all = places as PlaceRecord[];
-    return favorites.map((slug) => all.find((p) => p.slug === slug)).filter(Boolean) as PlaceRecord[];
-  }, [favorites]);
+    return favorites.map((slug) => places.find((p) => p.slug === slug)).filter(Boolean) as PlaceRecord[];
+  }, [favorites, places]);
 
   const isAuthenticated = typeof window !== "undefined" && !!window.localStorage.getItem("dalat_user");
 
@@ -71,8 +79,8 @@ export default function FavoritesPage() {
         ) : (
           <div className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
             {placesList.map((place) => (
-              <article key={place.slug} className="overflow-hidden rounded-[2rem] border border-pine-500/10 bg-white shadow-[0_18px_45px_rgba(26,47,15,0.08)] transition hover:-translate-y-1">
-                <div className="relative aspect-[4/3] bg-cover bg-center" style={{ backgroundImage: `url(${place.image ?? '/images/dalat3.png'})` }}>
+              <article key={place.slug} className="overflow-hidden rounded-4xl border border-pine-500/10 bg-white shadow-[0_18px_45px_rgba(26,47,15,0.08)] transition hover:-translate-y-1">
+                <div className="relative aspect-4/3 bg-cover bg-center" style={{ backgroundImage: `url(${place.image ?? '/images/dalat3.png'})` }}>
                   <span className="absolute left-4 top-4 rounded-full bg-cream/95 px-3 py-1 text-xs font-semibold text-pine-900 backdrop-blur">{place.category ?? 'Điểm đến'}</span>
                 </div>
                 <div className="p-5">

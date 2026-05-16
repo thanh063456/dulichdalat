@@ -1,32 +1,17 @@
 import Image from "next/image";
 import Link from "next/link";
 import FavoriteButton from "@/components/favorites/favorite-button";
+import PlaceBookingButton from "@/components/booking/place-booking-button";
 import { notFound } from "next/navigation";
-import places from "@/data/dalat.json";
 import PlaceReviewSection from "@/components/reviews/place-review-section";
-
-type PlaceRecord = {
-  slug: string;
-  name: string;
-  category?: string;
-  rating?: number;
-  reviewCount?: number;
-  address: string;
-  hours: string;
-  description?: string;
-  tags: string[];
-  image?: string;
-  summary?: string;
-};
-
-const placeItems = places as PlaceRecord[];
+import { getPlaceBySlug, getPlaces, type PlaceRecord } from "@/lib/places";
 
 function getDescription(place: PlaceRecord) {
   return place.description ?? place.summary ?? "Địa điểm nổi bật tại Đà Lạt.";
 }
 
 function getImage(place: PlaceRecord) {
-  return place.image ?? "/images/dalat1.png";
+  return place.image || "/images/dalat1.png";
 }
 
 function getCategory(place: PlaceRecord) {
@@ -82,8 +67,8 @@ function getPlaceStyle(place: PlaceRecord) {
   };
 }
 
-function getRelatedPlaces(current: PlaceRecord) {
-  const related = placeItems
+function getRelatedPlaces(current: PlaceRecord, allPlaces: PlaceRecord[]) {
+  const related = allPlaces
     .filter((item) => item.slug !== current.slug)
     .sort((left, right) => {
       const leftScore = left.category === current.category ? 2 : 0;
@@ -94,13 +79,14 @@ function getRelatedPlaces(current: PlaceRecord) {
   return related.slice(0, 3);
 }
 
-export function generateStaticParams() {
-  return placeItems.map((place) => ({ slug: place.slug }));
+export async function generateStaticParams() {
+  const places = await getPlaces();
+  return places.map((place) => ({ slug: place.slug }));
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const place = placeItems.find((item) => item.slug === slug);
+  const place = await getPlaceBySlug(slug);
 
   if (!place) {
     return {
@@ -116,14 +102,15 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function PlaceDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const place = placeItems.find((item) => item.slug === slug);
+  const place = await getPlaceBySlug(slug);
+  const allPlaces = await getPlaces();
 
   if (!place) {
     notFound();
   }
 
   const style = getPlaceStyle(place);
-  const relatedPlaces = getRelatedPlaces(place);
+  const relatedPlaces = getRelatedPlaces(place, allPlaces);
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-10 sm:px-10 lg:px-12 lg:py-14">
@@ -179,11 +166,12 @@ export default async function PlaceDetailPage({ params }: { params: Promise<{ sl
           </div>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <PlaceBookingButton placeName={place.name} category={getCategory(place)} />
             <Link
               href={`/chat?prompt=${encodeURIComponent(`Hỏi AI về ${place.name}`)}`}
               className="inline-flex items-center justify-center rounded-full bg-pine-700 px-5 py-3 text-sm font-semibold text-cream transition hover:bg-pine-900"
             >
-              Hỏi AI về nơi này
+              Hỏi AI
             </Link>
             <a
               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${place.name} Đà Lạt`)}`}

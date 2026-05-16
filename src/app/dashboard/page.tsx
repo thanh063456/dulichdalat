@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getSupabaseAdminClient } from "@/lib/chatbot/db";
 import { DashboardBookingList } from "@/components/admin/dashboard-booking-list";
-import places from "@/data/dalat.json";
+import { getPlaces } from "@/lib/places";
 
 export const dynamic = "force-dynamic";
 
@@ -48,9 +48,9 @@ function formatNumber(value: number) {
   return new Intl.NumberFormat("vi-VN").format(value);
 }
 
-async function safeCount(
-  query: any,
-) {
+type CountQuery = PromiseLike<{ error?: unknown; count?: number | null }>;
+
+async function safeCount(query: CountQuery) {
   try {
     const result = await query;
     return result.error ? 0 : result.count ?? 0;
@@ -123,18 +123,21 @@ export default async function DashboardPage() {
     pendingReviews = (pendingReviewRes.data ?? []) as ReviewRow[];
   }
 
-  // total places from data file
-  stats.totalPlaces = places.length;
+  const placeList = await getPlaces();
+  stats.totalPlaces = placeList.length;
+  const placeMap = new Map(placeList.map((place) => [place.slug, place.name]));
 
   const confirmationRate = stats.bookings > 0 ? Math.round((stats.confirmed / stats.bookings) * 100) : 0;
-  const bookingOccupancy = stats.bookings > 0 ? Math.round((stats.confirmed + stats.pending) / stats.bookings * 100) : 0;
+  const bookingOccupancy = stats.bookings > 0 ? Math.round(((stats.confirmed + stats.pending) / stats.bookings) * 100) : 0;
   const liveStatus = supabase ? "Dữ liệu real-time từ Supabase" : "Chưa cấu hình SUPABASE_SERVICE_ROLE_KEY";
 
   const adminNav: AdminNavItem[] = [
     { href: "/dashboard", label: "Tổng quan", detail: "Số liệu chính và booking gần đây" },
     { href: "/admin/blog", label: "Quản lý Blog", detail: "Bài viết và trạng thái xuất bản" },
+    { href: "/admin/places", label: "Quản lý Địa điểm", detail: "Thêm, sửa, xóa địa điểm" },
     { href: "/admin/bookings", label: "Quản lý Tour", detail: "Đơn đặt tour và xác nhận" },
     { href: "/admin/danh-gia", label: "Quản lý Đánh giá", detail: "Duyệt review địa điểm" },
+    { href: "/admin/binh-luan", label: "Quản lý Bình luận", detail: "Duyệt và xóa bình luận blog" },
     { href: "/admin/users", label: "Quản lý Users", detail: "Tài khoản và vai trò" },
   ];
 
@@ -215,7 +218,7 @@ export default async function DashboardPage() {
                 <tbody className="divide-y divide-pine-500/10 bg-white">
                   {pendingReviews.map((review) => (
                     <tr key={review.id}>
-                      <td className="px-4 py-4 text-sm font-semibold text-pine-900">{review.place_slug}</td>
+                      <td className="px-4 py-4 text-sm font-semibold text-pine-900">{placeMap.get(review.place_slug) ?? review.place_slug}</td>
                       <td className="px-4 py-4 text-sm text-charcoal">{review.user_name}</td>
                       <td className="px-4 py-4 text-sm text-gold">{review.rating}★</td>
                       <td className="px-4 py-4 text-sm text-smoke">

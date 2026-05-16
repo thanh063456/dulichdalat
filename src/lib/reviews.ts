@@ -1,4 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 import { jwtDecode } from "jwt-decode";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
@@ -15,75 +16,39 @@ export type ReviewUser = {
   role?: string;
 };
 
-export function createAnonSupabaseClient() {
-  return createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
+export async function getAuthUser() {
+  const cookieStore = await cookies();
+  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
+      },
+      setAll(cookiesToSet) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
+        } catch {}
+      },
     },
   });
-}
-
-export function createAuthenticatedSupabaseClient(request: Request) {
-  const token = getAuthTokenFromRequest(request);
-
-  return createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-    },
-    global: {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    },
-  });
-}
-
-export function getAuthTokenFromRequest(request: Request) {
-  const cookieHeader = request.headers.get("cookie") || "";
-  const cookies = Object.fromEntries(
-    cookieHeader.split("; ").filter(Boolean).map((part) => part.trim().split("=").slice(0, 2) as [string, string])
-  );
-
-  // Try multiple Supabase cookie name patterns
-  const token =
-    cookies["sb-auth-token"] ||
-    cookies["auth.token"] ||
-    Object.entries(cookies)
-      .find(([key]) => key.includes("auth-token") || key.includes("session"))?.[1] ||
-    "";
-
-  if (token) {
-    console.log("[Auth] Token found from cookie");
-  } else {
-    console.log("[Auth] No token found. Cookies:", Object.keys(cookies));
-  }
-
-  return token;
-}
-
-export function getUserIdFromToken(token: string) {
-  try {
-    const decoded = jwtDecode<AuthPayload>(token);
-    return decoded.sub;
-  } catch {
-    return "";
-  }
-}
-
-export function getUserIdFromRequest(request: Request) {
-  const token = getAuthTokenFromRequest(request);
-  return getUserIdFromToken(token);
+  const { data } = await supabase.auth.getUser();
+  return data.user;
 }
 
 export async function getCurrentUser(request: Request): Promise<ReviewUser | null> {
-  const token = getAuthTokenFromRequest(request);
-  const userId = getUserIdFromToken(token);
+  const user = await getAuthUser();
+  const userId = user?.id;
 
   if (!userId) {
     return null;
   }
 
-  const supabase = createAuthenticatedSupabaseClient(request);
+  const cookieStore = await cookies();
+  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      getAll() { return cookieStore.getAll(); },
+      setAll() {}
+    }
+  });
   const { data } = await supabase
     .from("profiles")
     .select("id, name, role")

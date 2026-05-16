@@ -1,10 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
 import { jwtDecode } from "jwt-decode";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { getSupabasePublicClient } from "@/lib/supabase/public";
 
 type UserPayload = {
   sub: string;
@@ -31,6 +26,11 @@ async function getAuthUser(request: Request): Promise<string | null> {
 }
 
 async function isAdmin(userId: string): Promise<boolean> {
+  const supabase = getSupabasePublicClient();
+  if (!supabase) {
+    return false;
+  }
+
   try {
     const { data } = await supabase
       .from("profiles")
@@ -59,6 +59,11 @@ export async function PUT(
     const admin = await isAdmin(userId);
     if (!admin) {
       return Response.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const supabase = getSupabasePublicClient();
+    if (!supabase) {
+      return Response.json({ error: "Supabase is not configured" }, { status: 500 });
     }
 
     const body = (await request.json()) as {
@@ -118,6 +123,11 @@ export async function DELETE(
     const admin = await isAdmin(userId);
     if (!admin) {
       return Response.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const supabase = getSupabasePublicClient();
+    if (!supabase) {
+      return Response.json({ error: "Supabase is not configured" }, { status: 500 });
     }
 
     const { error } = await supabase

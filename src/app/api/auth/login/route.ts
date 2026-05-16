@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 import { z } from "zod";
 import { getSupabaseAdminClient } from "@/lib/chatbot/db";
 
@@ -22,7 +23,22 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, message: "Đăng nhập mô phỏng thành công (chưa cấu hình Supabase)." });
   }
 
-  const supabase = createClient(supabaseUrl, supabaseAnonKey);
+  const cookieStore = await cookies();
+  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
+      },
+      setAll(cookiesToSet) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options)
+          );
+        } catch {}
+      },
+    },
+  });
+
   const { data, error } = await supabase.auth.signInWithPassword({
     email: parsed.data.email,
     password: parsed.data.password,
@@ -39,23 +55,13 @@ export async function POST(request: NextRequest) {
         });
 
         if (!retry.error && retry.data.user) {
-          const response = NextResponse.json({
+          return NextResponse.json({
             success: true,
             message: "Đăng nhập thành công.",
             user: retry.data.user,
             profile: await getUserProfile(retry.data.user.id, retry.data.user.user_metadata?.name || "Khách", retry.data.user.email || parsed.data.email),
             session: retry.data.session,
           });
-
-          if (retry.data.session?.access_token) {
-            const secure = process.env.NODE_ENV === "production" ? "Secure;" : "";
-            const match = process.env.NEXT_PUBLIC_SUPABASE_URL?.match(/https?:\/\/([^.]+)\.supabase\.co/);
-            const projectId = match ? match[1] : "default";
-            const cookieValue = `sb-${projectId}-auth-token=${retry.data.session.access_token}; Path=/; ${secure}SameSite=Lax; Max-Age=${60 * 60 * 24 * 365}`;
-            response.headers.set("Set-Cookie", cookieValue);
-          }
-
-          return response;
         }
 
         return NextResponse.json({ success: false, message: retry.error?.message || "Không thể đăng nhập." });
@@ -67,24 +73,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, message: error.message });
   }
 
-  const response = NextResponse.json({
+  return NextResponse.json({
     success: true,
     message: "Đăng nhập thành công.",
     user: data.user,
     profile: await getUserProfile(data.user.id, data.user.user_metadata?.name || "Khách", data.user.email || parsed.data.email),
     session: data.session,
   });
-
-  if (data.session?.access_token) {
-    // Set Supabase session cookies for SSR compatibility
-    const secure = process.env.NODE_ENV === "production" ? "Secure;" : "";
-    const match = process.env.NEXT_PUBLIC_SUPABASE_URL?.match(/https?:\/\/([^.]+)\.supabase\.co/);
-    const projectId = match ? match[1] : "default";
-    const cookieValue = `sb-${projectId}-auth-token=${data.session.access_token}; Path=/; ${secure}SameSite=Lax; Max-Age=${60 * 60 * 24 * 365}`;
-    response.headers.set("Set-Cookie", cookieValue);
-  }
-
-  return response;
 }
 
 function isDevAuthAutoConfirmEnabled() {
