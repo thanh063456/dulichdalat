@@ -61,10 +61,25 @@ function normalizeGeo(geo: unknown): PlaceGeo | null {
 }
 
 export function normalizePlace(place: Partial<PlaceRecord> & { geo?: unknown; review_count?: number; is_hidden?: boolean; hidden?: boolean }): PlaceRecord {
+  const tags = normalizeTags(place.tags);
+  let category = place.category ?? "Điểm đến";
+  if (category === "Điểm đến") {
+    const lowerTags = tags.map(t => t.toLowerCase());
+    if (lowerTags.includes("bike_rental") || lowerTags.includes("transport")) {
+      category = "Thuê xe";
+    } else if (lowerTags.includes("food") || lowerTags.includes("cafe") || lowerTags.includes("coffee") || lowerTags.includes("restaurant") || lowerTags.includes("nuong")) {
+      category = "Ẩm Thực";
+    } else if (lowerTags.includes("sight") || lowerTags.includes("landmark") || lowerTags.includes("nature") || lowerTags.includes("historic")) {
+      category = "Tham Quan";
+    } else if (lowerTags.includes("stay") || lowerTags.includes("homestay") || lowerTags.includes("hotel")) {
+      category = "Lưu trú";
+    }
+  }
+
   return {
     slug: place.slug ?? "",
     name: place.name ?? "",
-    category: place.category ?? "Điểm đến",
+    category,
     rating: Number(place.rating ?? 0),
     reviewCount: Number(place.reviewCount ?? place.review_count ?? 0),
     hidden: Boolean(place.hidden ?? place.is_hidden ?? false),
@@ -72,7 +87,7 @@ export function normalizePlace(place: Partial<PlaceRecord> & { geo?: unknown; re
     hours: place.hours ?? "",
     description: place.description ?? place.summary ?? "",
     summary: place.summary ?? place.description ?? "",
-    tags: normalizeTags(place.tags),
+    tags,
     image: place.image ?? "",
     verified: Boolean(place.verified),
     phone: place.phone ?? "",

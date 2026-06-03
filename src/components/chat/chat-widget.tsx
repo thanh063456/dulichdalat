@@ -3,6 +3,7 @@
 /* eslint-disable react-hooks/immutability */
 
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { BookingModal } from "@/components/chat/booking-modal";
 
 type ChatRole = "user" | "bot";
@@ -68,15 +69,21 @@ function createSessionId() {
   }
 
   const user = getStoredUser();
-  const storageKey = user?.id ? `dalat_sid_${user.id}` : "dalat_sid_guest";
-  const stored = window.localStorage.getItem(storageKey);
-  if (stored) {
-    return { id: stored, userId: user?.id ?? null };
+  if (user?.id) {
+    const storageKey = `dalat_sid_${user.id}`;
+    const stored = window.localStorage.getItem(storageKey);
+    if (stored) {
+      return { id: stored, userId: user.id };
+    }
+
+    const generated = window.crypto.randomUUID();
+    window.localStorage.setItem(storageKey, generated);
+    return { id: generated, userId: user.id };
   }
 
+  // Guest: always get a new session ID, do not persist to localStorage
   const generated = window.crypto.randomUUID();
-  window.localStorage.setItem(storageKey, generated);
-  return { id: generated, userId: user?.id ?? null };
+  return { id: generated, userId: null };
 }
 
 function formatMessage(text: string) {
@@ -104,14 +111,47 @@ function extractQuickChoices(mode: "floating" | "embedded"): ChatChoice[] {
 }
 
 export function ChatWidget({ mode = "floating", autoSend = null }: ChatWidgetProps) {
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(mode === "embedded");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [choices, setChoices] = useState<ChatChoice[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [unread, setUnread] = useState(0);
-  const [session] = useState<{ id: string; userId: string | null }>(() => createSessionId());
+  const [session, setSession] = useState<{ id: string; userId: string | null }>(() => createSessionId());
   const [historyLoaded, setHistoryLoaded] = useState(false);
+  const isFirstMount = useRef(true);
+
+  useEffect(() => {
+    // Only reset for guest users when the route (pathname) changes
+    if (isFirstMount.current) {
+      isFirstMount.current = false;
+      return;
+    }
+    if (!session.userId) {
+      const newSession = createSessionId();
+      setSession(newSession);
+      setMessages([]);
+      setChoices([]);
+      setHistoryLoaded(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
+
+  useEffect(() => {
+    const handleUserChange = () => {
+      const newSession = createSessionId();
+      setSession(newSession);
+      setMessages([]);
+      setChoices([]);
+      setHistoryLoaded(false);
+    };
+
+    window.addEventListener("dalat-user-changed", handleUserChange);
+    return () => {
+      window.removeEventListener("dalat-user-changed", handleUserChange);
+    };
+  }, []);
   const [bookingOpen, setBookingOpen] = useState(false);
   const [bookingPlaceName, setBookingPlaceName] = useState("");
   const [bookingType, setBookingType] = useState<"room" | "table">("table");
@@ -135,7 +175,7 @@ export function ChatWidget({ mode = "floating", autoSend = null }: ChatWidgetPro
 
   useEffect(() => {
     async function loadHistory() {
-      if (!session.id) {
+      if (!session.id || !session.userId) {
         setHistoryLoaded(true);
         return;
       }
@@ -164,7 +204,7 @@ export function ChatWidget({ mode = "floating", autoSend = null }: ChatWidgetPro
 
     void loadHistory();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session.id]);
+  }, [session.id, session.userId]);
 
   const quickChoices = extractQuickChoices(mode);
 
@@ -221,6 +261,22 @@ export function ChatWidget({ mode = "floating", autoSend = null }: ChatWidgetPro
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoSend, session.id]);
 
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const customEvent = e as CustomEvent<{ prompt: string }>;
+      setIsOpen(true);
+      setUnread(0);
+      if (customEvent.detail?.prompt && session.id) {
+        void sendMessage(customEvent.detail.prompt);
+      }
+    };
+
+    window.addEventListener("open-chat", handler as EventListener);
+    return () => {
+      window.removeEventListener("open-chat", handler as EventListener);
+    };
+  }, [session.id]);
+
   async function sendMessage(text: string) {
     if (!text.trim() || !session.id) {
       return;
@@ -263,6 +319,9 @@ export function ChatWidget({ mode = "floating", autoSend = null }: ChatWidgetPro
   }
 
   async function saveHistoryMessage(sender: "user" | "bot", message: string) {
+    if (!session.userId) {
+      return;
+    }
     try {
       await fetch("/api/chat/history", {
         method: "POST",
@@ -280,7 +339,7 @@ export function ChatWidget({ mode = "floating", autoSend = null }: ChatWidgetPro
     setChoices([]);
 
     try {
-      if (session.id) {
+      if (session.id && session.userId) {
         await fetch(`/api/chat/history?sid=${encodeURIComponent(session.id)}`, { method: "DELETE", credentials: "include" });
       }
     } catch {

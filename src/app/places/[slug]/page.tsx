@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import FavoriteButton from "@/components/favorites/favorite-button";
 import PlaceBookingButton from "@/components/booking/place-booking-button";
+import AskAiButton from "@/components/booking/ask-ai-button";
 import { notFound } from "next/navigation";
 import PlaceReviewSection from "@/components/reviews/place-review-section";
 import { getPlaceBySlug, getPlaces, type PlaceRecord } from "@/lib/places";
@@ -166,13 +167,8 @@ export default async function PlaceDetailPage({ params }: { params: Promise<{ sl
           </div>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <PlaceBookingButton placeName={place.name} category={getCategory(place)} />
-            <Link
-              href={`/chat?prompt=${encodeURIComponent(`Hỏi AI về ${place.name}`)}`}
-              className="inline-flex items-center justify-center rounded-full bg-pine-700 px-5 py-3 text-sm font-semibold text-cream transition hover:bg-pine-900"
-            >
-              Hỏi AI
-            </Link>
+            <PlaceBookingButton placeName={place.name} category={getCategory(place)} tags={place.tags} />
+            <AskAiButton placeName={place.name} />
             <a
               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${place.name} Đà Lạt`)}`}
               target="_blank"

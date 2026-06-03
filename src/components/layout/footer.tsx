@@ -41,11 +41,6 @@ export function Footer() {
         <div>
           <p className="font-heading text-2xl">Hỗ trợ</p>
           <ul className="mt-5 space-y-3 text-sm text-cream/75">
-            <li>
-              <Link href="/chat" className="transition hover:text-cream">
-                Chat với AI
-              </Link>
-            </li>
             <li>Lên lịch trình</li>
             <li>Đặt bàn / phòng</li>
             <li>Câu hỏi thường gặp</li>

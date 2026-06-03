@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { getSupabaseAdminClient } from "@/lib/chatbot/db";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const requestSchema = z.object({
   place_name: z.string().min(2),
@@ -25,7 +26,25 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, message: "Đặt chỗ thành công!" });
   }
 
-  const bookingInsert = await supabase.from("bookings").insert(parsed.data).select().single();
+  let userId: string | null = null;
+  try {
+    const supabaseServer = await createSupabaseServerClient();
+    const { data: { user } } = await supabaseServer.auth.getUser();
+    if (user) {
+      userId = user.id;
+    }
+  } catch (err) {
+    console.error("Error fetching user in booking route:", err);
+  }
+
+  const bookingInsert = await supabase
+    .from("bookings")
+    .insert({
+      ...parsed.data,
+      user_id: userId,
+    })
+    .select()
+    .single();
 
   if (bookingInsert.error) {
     return NextResponse.json({ success: false, message: bookingInsert.error.message }, { status: 400 });

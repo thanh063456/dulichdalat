@@ -33,6 +33,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   }
 
   const payload = {
+    slug,
     name: place.name,
     category: place.category,
     rating: place.rating,
@@ -48,13 +49,20 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     phone: place.phone,
     gmaps_link: place.gmapsLink,
     geo: place.geo,
-    updated_at: new Date().toISOString(),
   };
 
-  const { data, error } = await supabase.from("places").upsert({ slug, ...payload }, { onConflict: "slug" }).select().single();
+  const { data, error } = await supabase
+    .from("places")
+    .upsert(payload, { onConflict: "slug" })
+    .select()
+    .single();
 
   if (error) {
-    return NextResponse.json({ error: "Failed to update place" }, { status: 500 });
+    console.error("[Admin Places PUT] Supabase error:", error);
+    return NextResponse.json(
+      { error: "Failed to save place", details: error.message },
+      { status: 500 },
+    );
   }
 
   return NextResponse.json({ place: normalizePlace(data as any) });
@@ -72,10 +80,17 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   }
 
   const { slug } = await params;
-  const { error } = await supabase.from("places").upsert({ slug, is_hidden: true }, { onConflict: "slug" });
+  const { error } = await supabase
+    .from("places")
+    .update({ is_hidden: true })
+    .eq("slug", slug);
 
   if (error) {
-    return NextResponse.json({ error: "Failed to delete place" }, { status: 500 });
+    console.error("[Admin Places DELETE] Supabase error:", error);
+    return NextResponse.json(
+      { error: "Failed to delete place", details: error.message },
+      { status: 500 },
+    );
   }
 
   return NextResponse.json({ success: true });

@@ -73,7 +73,10 @@ function getStatusLabel(status: BookingStatus) {
   }
 }
 
-function getBookingTypeLabel(type: BookingRow["type"]) {
+function getBookingTypeLabel(type: BookingRow["type"], placeName: string = "") {
+  if (placeName.toLowerCase().includes("thuê xe") || placeName.toLowerCase().includes("xe máy")) {
+    return "Thuê xe máy";
+  }
   return type === "room" ? "Lưu trú" : "Đặt bàn";
 }
 
@@ -292,7 +295,7 @@ export default function AdminBookingsPage() {
                     <p className="mt-1 text-sm text-smoke">{booking.place_name}</p>
                   </div>
                   <div className="text-sm text-smoke">
-                    <p>{getBookingTypeLabel(booking.type)}</p>
+                    <p>{getBookingTypeLabel(booking.type, booking.place_name)}</p>
                     <p className="mt-1">{booking.phone}</p>
                   </div>
                   <div className="text-sm text-smoke">
@@ -325,12 +328,26 @@ export default function AdminBookingsPage() {
                   {getStatusLabel(selectedBooking.status)}
                 </span>
                 <div className="mt-4 grid gap-3 text-sm text-smoke">
-                  <p><span className="font-semibold text-pine-900">Loại:</span> {getBookingTypeLabel(selectedBooking.type)}</p>
+                  <p><span className="font-semibold text-pine-900">Loại:</span> {getBookingTypeLabel(selectedBooking.type, selectedBooking.place_name)}</p>
                   <p><span className="font-semibold text-pine-900">Số điện thoại:</span> {selectedBooking.phone}</p>
-                  <p><span className="font-semibold text-pine-900">Ngày check-in:</span> {formatDate(selectedBooking.date_in)}</p>
-                  <p><span className="font-semibold text-pine-900">Check-out:</span> {selectedBooking.date_out ? formatDate(selectedBooking.date_out) : "Chưa có"}</p>
-                  <p><span className="font-semibold text-pine-900">Giờ:</span> {selectedBooking.time ?? "Không đặt giờ"}</p>
-                  <p><span className="font-semibold text-pine-900">Khách:</span> {selectedBooking.guests} người</p>
+                  {selectedBooking.place_name.toLowerCase().includes("thuê xe") ? (
+                    <>
+                      <p><span className="font-semibold text-pine-900">Ngày thuê:</span> {formatDate(selectedBooking.date_in)}</p>
+                      <p><span className="font-semibold text-pine-900">Ngày trả:</span> {selectedBooking.date_out ? formatDate(selectedBooking.date_out) : "Chưa có"}</p>
+                      <p><span className="font-semibold text-pine-900">Số lượng:</span> {selectedBooking.guests} xe</p>
+                    </>
+                  ) : (
+                    <>
+                      <p><span className="font-semibold text-pine-900">Ngày check-in:</span> {formatDate(selectedBooking.date_in)}</p>
+                      {selectedBooking.type === "room" && (
+                        <p><span className="font-semibold text-pine-900">Check-out:</span> {selectedBooking.date_out ? formatDate(selectedBooking.date_out) : "Chưa có"}</p>
+                      )}
+                      {selectedBooking.time && (
+                        <p><span className="font-semibold text-pine-900">Giờ:</span> {selectedBooking.time}</p>
+                      )}
+                      <p><span className="font-semibold text-pine-900">Khách:</span> {selectedBooking.guests} người</p>
+                    </>
+                  )}
                   <p><span className="font-semibold text-pine-900">Tạo lúc:</span> {formatDateTime(selectedBooking.created_at)}</p>
                   <p><span className="font-semibold text-pine-900">Mã booking:</span> #{selectedBooking.id}</p>
                 </div>

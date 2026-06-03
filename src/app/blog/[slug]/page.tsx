@@ -122,6 +122,7 @@ export default function BlogPostPage({
       const response = await fetch(`/api/blog/posts/${post.slug}/comments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ content: comment }),
       });
 

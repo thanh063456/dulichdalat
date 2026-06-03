@@ -60,7 +60,14 @@ export default function LoginPage() {
 
         <div className="mt-8 space-y-4">
           <Field label="Email" type="email" value={form.email} onChange={(value) => setForm((current) => ({ ...current, email: value }))} />
-          <Field label="Mật khẩu" type="password" value={form.password} onChange={(value) => setForm((current) => ({ ...current, password: value }))} />
+          <div>
+            <Field label="Mật khẩu" type="password" value={form.password} onChange={(value) => setForm((current) => ({ ...current, password: value }))} />
+            <div className="mt-2 text-right">
+              <Link href="/forgot-password" className="text-xs font-semibold text-pine-700 hover:text-pine-900 transition">
+                Quên mật khẩu?
+              </Link>
+            </div>
+          </div>
         </div>
 
         {error ? <p className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p> : null}

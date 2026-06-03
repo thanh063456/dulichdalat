@@ -8,13 +8,12 @@ const navigation = [
   { href: "/", label: "Trang Chủ" },
   { href: "/places", label: "Khám Phá" },
   { href: "/blog", label: "Blog" },
-  { href: "/dat-tour", label: "Đặt Tour" },
-  { href: "/chat", label: "Chat" },
 ];
 
 type HeaderUser = {
   name: string;
   role: string;
+  avatar_url?: string;
 };
 
 function readStoredUserSnapshot(): string {
@@ -47,7 +46,7 @@ export function Header() {
     }
 
     try {
-      const parsed = JSON.parse(userSnapshot) as { name?: string; role?: string } | null;
+      const parsed = JSON.parse(userSnapshot) as { name?: string; role?: string; avatar_url?: string } | null;
       if (!parsed?.name) {
         return null;
       }
@@ -55,6 +54,7 @@ export function Header() {
       return {
         name: parsed.name,
         role: parsed.role || "user",
+        avatar_url: parsed.avatar_url || "",
       };
     } catch {
       return null;
@@ -69,7 +69,10 @@ export function Header() {
         ]
       : []),
     ...(user
-      ? [{ href: "/yeu-thich", label: "Yêu Thích" }]
+      ? [
+          { href: "/yeu-thich", label: "Yêu Thích" },
+          { href: "/profile", label: "Hồ Sơ" },
+        ]
       : []),
   ];
 
@@ -118,11 +121,24 @@ export function Header() {
 
         <div className="hidden items-center gap-3 lg:flex">
           {user ? (
-            <div className="flex items-center gap-3 rounded-full border border-pine-500/20 bg-white px-4 py-2 text-left shadow-sm">
-              <div>
-                <p className="text-sm font-semibold text-pine-900">{user.name}</p>
-                <p className="text-[11px] uppercase tracking-[0.22em] text-smoke">{user.role}</p>
-              </div>
+            <div className="flex items-center gap-3 rounded-full border border-pine-500/20 bg-white px-4 py-1.5 text-left shadow-sm">
+              <Link href="/profile" className="flex items-center gap-3 transition hover:opacity-80">
+                {user.avatar_url ? (
+                  <img
+                    src={user.avatar_url}
+                    alt={user.name}
+                    className="h-9 w-9 rounded-full object-cover border border-pine-500/10 bg-cream"
+                  />
+                ) : (
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-pine-900 text-sm font-bold text-cream">
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div>
+                  <p className="text-sm font-semibold text-pine-900 leading-tight">{user.name}</p>
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-smoke mt-0.5">{user.role}</p>
+                </div>
+              </Link>
               <button
                 type="button"
                 onClick={handleLogoutConfirm}
@@ -172,10 +188,23 @@ export function Header() {
             ))}
             <div className="mt-2 flex gap-3">
               {user ? (
-                <div className="flex flex-1 items-center justify-between rounded-full border border-pine-500/20 bg-white px-5 py-3 text-sm font-semibold text-pine-900">
-                  <span>
-                    {user.name} · {user.role}
-                  </span>
+                <div className="flex flex-1 items-center justify-between rounded-full border border-pine-500/20 bg-white px-4 py-2 text-sm font-semibold text-pine-900">
+                  <Link href="/profile" className="flex items-center gap-3" onClick={() => setIsOpen(false)}>
+                    {user.avatar_url ? (
+                      <img
+                        src={user.avatar_url}
+                        alt={user.name}
+                        className="h-8 w-8 rounded-full object-cover border border-pine-500/10 bg-cream"
+                      />
+                    ) : (
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-pine-900 text-xs font-bold text-cream">
+                        {user.name.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <span className="leading-none">
+                      {user.name} · {user.role}
+                    </span>
+                  </Link>
                   <button
                     type="button"
                     onClick={handleLogoutConfirm}

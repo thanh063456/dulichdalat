@@ -1,5 +1,6 @@
 import { jwtDecode } from "jwt-decode";
 import { getSupabasePublicClient } from "@/lib/supabase/public";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type UserPayload = {
   sub: string;
@@ -65,11 +66,6 @@ export async function POST(
     const { slug } = await params;
     const { content } = (await request.json()) as { content?: string };
 
-    const supabase = getSupabasePublicClient();
-    if (!supabase) {
-      return Response.json({ error: "Supabase is not configured" }, { status: 500 });
-    }
-
     if (!content || !content.trim()) {
       return Response.json(
         { error: "Comment content is required" },
@@ -77,33 +73,20 @@ export async function POST(
       );
     }
 
-    // Get auth from cookie
-    const cookieHeader = request.headers.get("cookie") || "";
-    const cookies = Object.fromEntries(
-      cookieHeader.split("; ").map((c) => c.split("=").slice(0, 2) as [string, string])
-    );
+    const supabaseServer = await createSupabaseServerClient();
+    const { data: { user }, error: authError } = await supabaseServer.auth.getUser();
 
-    const sbAuthToken = cookies["sb-auth-token"];
-    if (!sbAuthToken) {
+    if (authError || !user) {
       return Response.json(
         { error: "Not authenticated" },
         { status: 401 }
       );
     }
 
-    let userId: string;
-    try {
-      const decoded = jwtDecode<UserPayload>(sbAuthToken);
-      userId = decoded.sub;
-    } catch {
-      return Response.json(
-        { error: "Invalid auth token" },
-        { status: 401 }
-      );
-    }
+    const userId = user.id;
 
     // Get the post to get its ID
-    const { data: post, error: postError } = await supabase
+    const { data: post, error: postError } = await supabaseServer
       .from("blog_posts")
       .select("id")
       .eq("slug", slug)
@@ -117,7 +100,7 @@ export async function POST(
     }
 
     // Create comment
-    const { error: insertError } = await supabase
+    const { error: insertError } = await supabaseServer
       .from("blog_comments")
       .insert({
         post_id: post.id,
@@ -135,7 +118,7 @@ export async function POST(
     }
 
     // Return updated comments list
-    const { data: comments } = await supabase
+    const { data: comments } = await supabaseServer
       .from("blog_comments")
       .select("id, content, created_at, author:author_id(name)")
       .eq("post_id", post.id)
